@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Local secrets (never commit)
+smtp.txt
+secret.txt
+
+# Leads & Logs (Sensitive Business Data)
+leads.csv
+sent_log.csv
+audit_results.csv
+*.pdf
+reply_preview.html
+
+# OS junk
+.DS_Store
+Thumbs.db

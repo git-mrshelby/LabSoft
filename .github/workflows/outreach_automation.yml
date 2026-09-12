@@ -1,0 +1,52 @@
+name: LabSoft Global Outreach
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs exactly once per hour
+  workflow_dispatch:       # Allows manual trigger
+
+permissions:
+  contents: write          # Required for git push
+
+jobs:
+  outreach_and_report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install fpdf2 pytz ddgs httpx beautifulsoup4 dnspython playwright
+          playwright install --with-deps chromium
+
+      - name: Run LabSoft Outreach Script
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SUMMARY_RECIPIENT: ${{ secrets.SUMMARY_RECIPIENT }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u global_lead_engine.py
+
+      - name: Commit Updated Leads Database
+        run: |
+          git config --global user.name 'Gen Coders Bot'
+          git config --global user.email 'gencodersbot@users.noreply.github.com'
+          git add leads.csv
+          git diff --cached --quiet || git commit -m "Auto: +leads $(date +'%Y-%m-%d %H:%M')"
+          git push || echo "Nothing to push"
+
+      - name: Upload PDF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hourly_Report_${{ github.run_number }}
+          path: "*.pdf"
+          if-no-files-found: ignore
